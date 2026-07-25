@@ -1,5 +1,4 @@
-import 'package:flutter/material.dart';
-import 'package:flutter_screenutil/flutter_screenutil.dart';
+﻿import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import '../../models/member.dart';
 import '../../services/api_service.dart';
@@ -13,7 +12,6 @@ class MembersListScreen extends StatefulWidget {
 }
 
 class _MembersListScreenState extends State<MembersListScreen> {
-  final _api = ApiService();
   List<Member> _members = [];
   bool _loading = true;
   String _search = '';
@@ -27,12 +25,14 @@ class _MembersListScreenState extends State<MembersListScreen> {
 
   Future<void> _loadMembers() async {
     try {
-      final res = await _api.get(
+      final res = await ApiService.get(
         '/members',
         queryParameters: {'search': _search.isEmpty ? null : _search, 'page': _page, 'limit': 20},
       );
+      final payload = res['data'];
       setState(() {
-        _members = (res.data['data'] as List).map((m) => Member.fromJson(m)).toList();
+        _members =
+            (payload as List).map((m) => Member.fromJson(m as Map<String, dynamic>)).toList();
         _loading = false;
       });
     } catch (e) {
@@ -55,7 +55,7 @@ class _MembersListScreenState extends State<MembersListScreen> {
       body: Column(
         children: [
           Padding(
-            padding: EdgeInsets.all(16.w),
+            padding: const EdgeInsets.all(16),
             child: TextField(
               onChanged: (v) {
                 _search = v;
@@ -75,37 +75,35 @@ class _MembersListScreenState extends State<MembersListScreen> {
                     itemCount: _members.length,
                     itemBuilder: (context, index) {
                       final m = _members[index];
+                      final avatarUrl = m.avatarUrl;
                       return ListTile(
                         leading: CircleAvatar(
                           backgroundColor: const Color(0xFFDBEAFE),
-                          backgroundImage: m.photoUrl != null ? NetworkImage(m.photoUrl!) : null,
-                          child: m.photoUrl == null
+                          backgroundImage: avatarUrl != null ? NetworkImage(avatarUrl) : null,
+                          child: avatarUrl == null
                               ? Text(m.initials, style: const TextStyle(color: Color(0xFF1E40AF)))
                               : null,
                         ),
                         title: Text(
                           m.fullName,
-                          style: TextStyle(fontWeight: FontWeight.w600, fontSize: 14.sp),
+                          style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 14),
                         ),
                         subtitle: Text(
                           m.email ?? m.phone ?? 'No contact info',
-                          style: TextStyle(fontSize: 12.sp, color: Colors.grey),
+                          style: const TextStyle(fontSize: 12, color: Colors.grey),
                         ),
                         trailing: Container(
-                          padding: EdgeInsets.symmetric(horizontal: 8.w, vertical: 4.h),
+                          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                           decoration: BoxDecoration(
                             color: m.membershipStatus == 'active'
                                 ? const Color(0xFFDCFCE7)
                                 : const Color(0xFFF1F5F9),
-                            borderRadius: BorderRadius.circular(12.r),
+                            borderRadius: BorderRadius.circular(12),
                           ),
                           child: Text(
                             m.membershipStatus,
-                            style: TextStyle(
-                              fontSize: 11.sp,
-                              color: m.membershipStatus == 'active'
-                                  ? const Color(0xFF166534)
-                                  : const Color(0xFF64748B),
+                            style: const TextStyle(
+                              fontSize: 11,
                               fontWeight: FontWeight.w600,
                             ),
                           ),
@@ -120,3 +118,4 @@ class _MembersListScreenState extends State<MembersListScreen> {
     );
   }
 }
+

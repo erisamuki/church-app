@@ -1,5 +1,4 @@
-import 'package:flutter/material.dart';
-import 'package:flutter_screenutil/flutter_screenutil.dart';
+﻿import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 import '../providers/auth_provider.dart';
@@ -28,7 +27,7 @@ class AppScaffold extends StatelessWidget {
               currentAccountPicture: CircleAvatar(
                 backgroundColor: const Color(0xFF3B82F6),
                 child: Text(
-                  (user?.firstName[0] ?? 'U') + (user?.lastName[0] ?? ''),
+                  user?.initials ?? 'U',
                   style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
                 ),
               ),
@@ -52,7 +51,7 @@ class AppScaffold extends StatelessWidget {
                 context.go('/');
               },
             ),
-            SizedBox(height: 20.h),
+            const SizedBox(height: 20),
           ],
         ),
       ),
@@ -83,8 +82,9 @@ class _DrawerItem extends StatelessWidget {
         ),
       ),
       tileColor: isActive ? const Color(0xFFEFF6FF) : null,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8.r)),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
       onTap: () => context.go(route),
     );
   }
 }
+

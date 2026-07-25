@@ -1,12 +1,12 @@
-import 'package:flutter/material.dart';
+﻿import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 import '../providers/auth_provider.dart';
 import '../screens/auth/login_screen.dart';
-import '../screens/dashboard/dashboard_screen.dart';
+import '../screens/dashboard_screen.dart';
 import '../screens/members/members_list_screen.dart';
 import '../screens/members/member_detail_screen.dart';
-import '../screens/events/events_screen.dart';
+import '../screens/events_screen.dart';
 
 class AppRouter {
   static final _rootNavigatorKey = GlobalKey<NavigatorState>();
@@ -36,3 +36,4 @@ class AppRouter {
     );
   }
 }
+

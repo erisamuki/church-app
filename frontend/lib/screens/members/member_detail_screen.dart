@@ -1,5 +1,4 @@
-import 'package:flutter/material.dart';
-import 'package:flutter_screenutil/flutter_screenutil.dart';
+﻿import 'package:flutter/material.dart';
 import '../../services/api_service.dart';
 import '../../widgets/app_scaffold.dart';
 
@@ -12,7 +11,6 @@ class MemberDetailScreen extends StatefulWidget {
 }
 
 class _MemberDetailScreenState extends State<MemberDetailScreen> {
-  final _api = ApiService();
   Map<String, dynamic>? _member;
   bool _loading = true;
 
@@ -24,9 +22,9 @@ class _MemberDetailScreenState extends State<MemberDetailScreen> {
 
   Future<void> _loadMember() async {
     try {
-      final res = await _api.get('/members/${widget.memberId}');
+      final res = await ApiService.get('/members/${widget.memberId}');
       setState(() {
-        _member = res.data['data'];
+        _member = res['data'] as Map<String, dynamic>?;
         _loading = false;
       });
     } catch (e) {
@@ -47,35 +45,35 @@ class _MemberDetailScreenState extends State<MemberDetailScreen> {
     return AppScaffold(
       title: 'Member Profile',
       body: SingleChildScrollView(
-        padding: EdgeInsets.all(20.w),
+        padding: const EdgeInsets.all(20),
         child: Column(
           children: [
             CircleAvatar(
-              radius: 50.r,
+              radius: 50,
               backgroundColor: const Color(0xFFDBEAFE),
               backgroundImage: m['photo_url'] != null ? NetworkImage(m['photo_url']) : null,
               child: m['photo_url'] == null
                   ? Text(
                       '${m['first_name'][0]}${m['last_name'][0]}',
-                      style: TextStyle(fontSize: 24.sp, color: const Color(0xFF1E40AF)),
+                      style: const TextStyle(fontSize: 24, color: Color(0xFF1E40AF)),
                     )
                   : null,
             ),
-            SizedBox(height: 16.h),
+            const SizedBox(height: 16),
             Text(
               '${m['first_name']} ${m['last_name']}',
               style: Theme.of(context).textTheme.headlineSmall,
             ),
-            SizedBox(height: 4.h),
+            const SizedBox(height: 4),
             Text(
               m['membership_status'].toString().toUpperCase(),
               style: TextStyle(
                 color: const Color(0xFF3B82F6),
                 fontWeight: FontWeight.w600,
-                fontSize: 12.sp,
+                fontSize: 12,
               ),
             ),
-            SizedBox(height: 24.h),
+            const SizedBox(height: 24),
             _InfoCard(
               children: [
                 _InfoRow(Icons.email_outlined, 'Email', m['email'] ?? 'Not provided'),
@@ -88,7 +86,7 @@ class _MemberDetailScreenState extends State<MemberDetailScreen> {
                 ),
               ],
             ),
-            SizedBox(height: 16.h),
+            const SizedBox(height: 16),
             _InfoCard(
               children: [
                 _InfoRow(
@@ -123,10 +121,10 @@ class _InfoCard extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       width: double.infinity,
-      padding: EdgeInsets.all(16.w),
+      padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
         color: Colors.white,
-        borderRadius: BorderRadius.circular(12.r),
+        borderRadius: BorderRadius.circular(12),
         border: Border.all(color: const Color(0xFFE2E8F0)),
       ),
       child: Column(children: children),
@@ -143,22 +141,22 @@ class _InfoRow extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Padding(
-      padding: EdgeInsets.symmetric(vertical: 8.h),
+      padding: const EdgeInsets.symmetric(vertical: 8),
       child: Row(
         children: [
-          Icon(icon, size: 20.sp, color: const Color(0xFF64748B)),
-          SizedBox(width: 12.w),
+          Icon(icon, size: 20, color: const Color(0xFF64748B)),
+          const SizedBox(width: 12),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
                   label,
-                  style: TextStyle(fontSize: 12.sp, color: const Color(0xFF94A3B8)),
+                  style: const TextStyle(fontSize: 12, color: Color(0xFF94A3B8)),
                 ),
                 Text(
                   value,
-                  style: TextStyle(fontSize: 14.sp, fontWeight: FontWeight.w500),
+                  style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w500),
                 ),
               ],
             ),
