@@ -8,6 +8,7 @@ import '../models/event.dart';
 import '../providers/auth_provider.dart';
 import '../utils/theme.dart';
 import 'add_event_screen.dart';
+import 'log_offering_screen.dart';
 
 class DashboardScreen extends StatefulWidget {
   const DashboardScreen({super.key});
@@ -279,8 +280,8 @@ class _DashboardScreenState extends State<DashboardScreen> {
           Icons.church_outlined, true),
       _StatData('Upcoming Events', _upcomingEvents.toString(), '3 happening this week',
           Icons.event_outlined, false),
-      _StatData('Monthly Giving', _monthlyGiving, '+18% from last month',
-          Icons.attach_money_outlined, true),
+      _StatData(
+          'Monthly Giving', _monthlyGiving, '+18% from last month', Icons.payments_outlined, true),
     ];
 
     return LayoutBuilder(
@@ -395,7 +396,15 @@ class _DashboardScreenState extends State<DashboardScreen> {
                 _QuickActionButton(
                   icon: Icons.payments_outlined,
                   label: 'Log Offering',
-                  onTap: () {},
+                  onTap: () async {
+                    final saved = await Navigator.push(
+                      context,
+                      MaterialPageRoute(builder: (context) => const LogOfferingScreen()),
+                    );
+                    if (saved == true) {
+                      _loadDashboardData();
+                    }
+                  },
                 ),
                 const SizedBox(height: 8),
                 _QuickActionButton(

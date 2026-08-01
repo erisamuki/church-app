@@ -38,9 +38,9 @@ class AppScaffold extends StatelessWidget {
             _DrawerItem(
               icon: Icons.volunteer_activism_outlined,
               label: 'Volunteers',
-              route: '/events',
+              route: '/volunteers',
             ),
-            _DrawerItem(icon: Icons.attach_money_outlined, label: 'Giving', route: '/events'),
+            _DrawerItem(icon: Icons.payments_outlined, label: 'Giving', route: '/giving'),
             const Spacer(),
             const Divider(),
             ListTile(
