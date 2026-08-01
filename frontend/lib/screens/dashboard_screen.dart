@@ -1,14 +1,13 @@
 ﻿import 'dart:convert';
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 import 'package:http/http.dart' as http;
 import 'package:provider/provider.dart';
 import '../models/member.dart';
 import '../models/event.dart';
 import '../providers/auth_provider.dart';
 import '../utils/theme.dart';
-import 'members/members_list_screen.dart';
-import 'members/member_detail_screen.dart';
-import 'members/add_member_screen.dart';
+import 'add_event_screen.dart';
 
 class DashboardScreen extends StatefulWidget {
   const DashboardScreen({super.key});
@@ -20,17 +19,14 @@ class DashboardScreen extends StatefulWidget {
 class _DashboardScreenState extends State<DashboardScreen> {
   bool _isLoading = true;
 
-  // Stats
   int _totalMembers = 0;
   int _sundayAttendance = 0;
   int _upcomingEvents = 0;
   String _monthlyGiving = 'UGX 0';
 
-  // Data lists
   List<Member> _recentMembers = [];
   ChurchEvent? _nextEvent;
 
-  // Chart data (monthly giving for last 6 months)
   final List<Map<String, dynamic>> _givingData = [
     {'month': 'Feb', 'amount': 18.5},
     {'month': 'Mar', 'amount': 21.0},
@@ -245,11 +241,8 @@ class _DashboardScreenState extends State<DashboardScreen> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              // Stats Grid
               _buildStatsGrid(),
               const SizedBox(height: 20),
-
-              // Main Content Row
               LayoutBuilder(
                 builder: (context, constraints) {
                   if (constraints.maxWidth > 900) {
@@ -336,10 +329,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                 ),
                 TextButton(
                   onPressed: () {
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(builder: (context) => const MembersListScreen()),
-                    );
+                    context.push('/members');
                   },
                   child: const Text('View all'),
                 ),
@@ -363,7 +353,6 @@ class _DashboardScreenState extends State<DashboardScreen> {
   Widget _buildRightColumn() {
     return Column(
       children: [
-        // Quick Actions
         Card(
           elevation: 0,
           shape: RoundedRectangleBorder(
@@ -387,17 +376,16 @@ class _DashboardScreenState extends State<DashboardScreen> {
                 _QuickActionButton(
                   icon: Icons.fact_check_outlined,
                   label: 'Record Attendance',
-                  onTap: () {},
+                  onTap: () {
+                    context.push('/checkin');
+                  },
                 ),
                 const SizedBox(height: 8),
                 _QuickActionButton(
                   icon: Icons.person_add_outlined,
                   label: 'Add New Member',
                   onTap: () async {
-                    final added = await Navigator.push(
-                      context,
-                      MaterialPageRoute(builder: (context) => const AddMemberScreen()),
-                    );
+                    final added = await context.push('/members/new');
                     if (added == true) {
                       _loadDashboardData();
                     }
@@ -413,15 +401,21 @@ class _DashboardScreenState extends State<DashboardScreen> {
                 _QuickActionButton(
                   icon: Icons.calendar_today_outlined,
                   label: 'Schedule Event',
-                  onTap: () {},
+                  onTap: () async {
+                    final created = await Navigator.push(
+                      context,
+                      MaterialPageRoute(builder: (context) => const AddEventScreen()),
+                    );
+                    if (created == true) {
+                      _loadDashboardData();
+                    }
+                  },
                 ),
               ],
             ),
           ),
         ),
         const SizedBox(height: 16),
-
-        // Next Event
         Card(
           elevation: 0,
           shape: RoundedRectangleBorder(
@@ -448,8 +442,6 @@ class _DashboardScreenState extends State<DashboardScreen> {
           ),
         ),
         const SizedBox(height: 16),
-
-        // Giving Chart
         Card(
           elevation: 0,
           shape: RoundedRectangleBorder(
@@ -572,8 +564,6 @@ class _DashboardScreenState extends State<DashboardScreen> {
   }
 }
 
-// ==================== STAT CARD ====================
-
 class _StatData {
   final String label;
   final String value;
@@ -644,8 +634,6 @@ class _StatCard extends StatelessWidget {
   }
 }
 
-// ==================== MEMBER ROW ====================
-
 class _MemberRow extends StatelessWidget {
   final Member member;
 
@@ -677,12 +665,7 @@ class _MemberRow extends StatelessWidget {
 
     return InkWell(
       onTap: () {
-        Navigator.push(
-          context,
-          MaterialPageRoute(
-            builder: (context) => MemberDetailScreen(memberId: member.id),
-          ),
-        );
+        context.push('/members/${member.id}');
       },
       borderRadius: BorderRadius.circular(6),
       child: Padding(
@@ -747,8 +730,6 @@ class _MemberRow extends StatelessWidget {
   }
 }
 
-// ==================== QUICK ACTION BUTTON ====================
-
 class _QuickActionButton extends StatelessWidget {
   final IconData icon;
   final String label;
@@ -789,8 +770,6 @@ class _QuickActionButton extends StatelessWidget {
     );
   }
 }
-
-// ==================== SIMPLE BAR CHART (No external package) ====================
 
 class _SimpleBarChart extends StatelessWidget {
   final List<Map<String, dynamic>> data;

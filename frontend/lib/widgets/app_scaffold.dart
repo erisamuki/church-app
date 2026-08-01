@@ -69,7 +69,7 @@ class _DrawerItem extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final currentRoute = GoRouterState.of(context).uri.toString();
+    final currentRoute = GoRouter.of(context).routerDelegate.currentConfiguration.uri.toString();
     final isActive = currentRoute == route;
 
     return ListTile(
@@ -83,8 +83,10 @@ class _DrawerItem extends StatelessWidget {
       ),
       tileColor: isActive ? const Color(0xFFEFF6FF) : null,
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
-      onTap: () => context.go(route),
+      onTap: () {
+        Navigator.pop(context); // close the drawer first
+        context.go(route);
+      },
     );
   }
 }
-

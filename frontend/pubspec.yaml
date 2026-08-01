@@ -19,6 +19,8 @@ dependencies:
 
   # Networking
   http: ^1.1.2
+  mobile_scanner: ^5.2.3
+  qr_flutter: ^4.1.0
 
   # Local storage
   shared_preferences: ^2.2.2

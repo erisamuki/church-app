@@ -129,8 +129,8 @@ class ChurchEvent {
       description: json['description'],
       eventType: json['event_type'] ?? json['type'] ?? 'other',
       location: json['location'] ?? '',
-      startDate: _parseDate(json['start_date'] ?? json['date']),
-      endDate: _parseDateNullable(json['end_date']),
+      startDate: _parseDate(json['start_datetime'] ?? json['start_date'] ?? json['date']),
+      endDate: _parseDateNullable(json['end_datetime'] ?? json['end_date']),
       expectedAttendees: json['expected_attendees'],
       actualAttendees: json['actual_attendees'],
       ministry: json['ministry'] ?? json['department'],
@@ -272,4 +272,3 @@ class ChurchEvent {
     return '$hour:$minute $period';
   }
 }
-
