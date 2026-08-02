@@ -9,6 +9,9 @@ import '../screens/members/add_member_screen.dart';
 import '../screens/events_screen.dart';
 import '../screens/attendance_checkin_screen.dart';
 import '../screens/giving_screen.dart';
+import '../screens/search_screen.dart';
+import '../screens/volunteers_screen.dart';
+import '../screens/ministers_screen.dart';
 
 class AppRouter {
   static final _rootNavigatorKey = GlobalKey<NavigatorState>();
@@ -27,8 +30,11 @@ class AppRouter {
       },
       routes: [
         GoRoute(path: '/', builder: (context, state) => const LoginScreen()),
+        GoRoute(path: '/volunteers', builder: (context, state) => const VolunteersScreen()),
         GoRoute(path: '/checkin', builder: (context, state) => const EventPickerScreen()),
         GoRoute(path: '/giving', builder: (context, state) => const GivingScreen()),
+        GoRoute(path: '/leadership', builder: (context, state) => const MinistersScreen()),
+        GoRoute(path: '/search', builder: (context, state) => const SearchScreen()),
         GoRoute(path: '/dashboard', builder: (context, state) => const DashboardScreen()),
         GoRoute(path: '/members', builder: (context, state) => const MembersListScreen()),
         GoRoute(path: '/members/new', builder: (context, state) => const AddMemberScreen()),

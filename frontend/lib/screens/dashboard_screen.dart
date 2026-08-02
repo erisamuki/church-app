@@ -7,6 +7,7 @@ import '../models/member.dart';
 import '../models/event.dart';
 import '../providers/auth_provider.dart';
 import '../utils/theme.dart';
+import '../widgets/app_scaffold.dart';
 import 'add_event_screen.dart';
 import 'log_offering_screen.dart';
 
@@ -138,9 +139,10 @@ class _DashboardScreenState extends State<DashboardScreen> {
   @override
   Widget build(BuildContext context) {
     if (_isLoading) {
-      return const Scaffold(
+      return Scaffold(
         backgroundColor: BCCTheme.lightGray,
-        body: Center(
+        drawer: const AppDrawer(),
+        body: const Center(
           child: CircularProgressIndicator(
             valueColor: AlwaysStoppedAnimation<Color>(BCCTheme.orange),
           ),
@@ -150,6 +152,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
 
     return Scaffold(
       backgroundColor: BCCTheme.lightGray,
+      drawer: const AppDrawer(),
       appBar: AppBar(
         backgroundColor: BCCTheme.white,
         elevation: 0,
@@ -162,26 +165,32 @@ class _DashboardScreenState extends State<DashboardScreen> {
           ),
         ),
         actions: [
-          Container(
-            margin: const EdgeInsets.only(right: 16),
-            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
-            decoration: BoxDecoration(
-              color: BCCTheme.lightGray,
-              borderRadius: BorderRadius.circular(10),
-              border: Border.all(color: BCCTheme.borderGray),
-            ),
-            child: const Row(
-              children: [
-                Icon(Icons.search, size: 18, color: BCCTheme.midGray),
-                SizedBox(width: 8),
-                Text(
-                  'Search members, events...',
-                  style: TextStyle(
-                    fontSize: 14,
-                    color: BCCTheme.midGray,
+          InkWell(
+            onTap: () {
+              context.push('/search');
+            },
+            borderRadius: BorderRadius.circular(10),
+            child: Container(
+              margin: const EdgeInsets.only(right: 16),
+              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+              decoration: BoxDecoration(
+                color: BCCTheme.lightGray,
+                borderRadius: BorderRadius.circular(10),
+                border: Border.all(color: BCCTheme.borderGray),
+              ),
+              child: const Row(
+                children: [
+                  Icon(Icons.search, size: 18, color: BCCTheme.midGray),
+                  SizedBox(width: 8),
+                  Text(
+                    'Search members, events...',
+                    style: TextStyle(
+                      fontSize: 14,
+                      color: BCCTheme.midGray,
+                    ),
                   ),
-                ),
-              ],
+                ],
+              ),
             ),
           ),
           Stack(
@@ -280,8 +289,8 @@ class _DashboardScreenState extends State<DashboardScreen> {
           Icons.church_outlined, true),
       _StatData('Upcoming Events', _upcomingEvents.toString(), '3 happening this week',
           Icons.event_outlined, false),
-      _StatData(
-          'Monthly Giving', _monthlyGiving, '+18% from last month', Icons.payments_outlined, true),
+      _StatData('Monthly Giving', _monthlyGiving, '+18% from last month',
+          Icons.attach_money_outlined, true),
     ];
 
     return LayoutBuilder(

@@ -26,5 +26,16 @@ router.get('/assignments/:eventId', authenticate, async (req, res, next) => {
     res.json({ success: true, data: result.rows });
   } catch (err) { next(err); }
 });
+router.post('/assignments', authenticate, async (req, res, next) => {
+  try {
+    const { event_id, member_id, role_id } = req.body;
+    const result = await query(
+      `INSERT INTO volunteer_assignments (event_id, member_id, role_id, status)
+       VALUES ($1, $2, $3, 'confirmed') RETURNING *`,
+      [event_id, member_id, role_id]
+    );
+    res.status(201).json({ success: true, data: result.rows[0] });
+  } catch (err) { next(err); }
+});
 
 module.exports = router;

@@ -3,6 +3,57 @@ import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 import '../providers/auth_provider.dart';
 
+/// Reusable drawer so it can be attached to any Scaffold,
+/// including screens (like Dashboard) that use a custom AppBar.
+class AppDrawer extends StatelessWidget {
+  const AppDrawer({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    final user = context.watch<AuthProvider>().user;
+
+    return Drawer(
+      child: Column(
+        children: [
+          UserAccountsDrawerHeader(
+            decoration: const BoxDecoration(color: Color(0xFF1E293B)),
+            accountName: Text(user?.fullName ?? 'User'),
+            accountEmail: Text(user?.email ?? ''),
+            currentAccountPicture: CircleAvatar(
+              backgroundColor: const Color(0xFF3B82F6),
+              child: Text(
+                user?.initials ?? 'U',
+                style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
+              ),
+            ),
+          ),
+          _DrawerItem(icon: Icons.dashboard_outlined, label: 'Dashboard', route: '/dashboard'),
+          _DrawerItem(icon: Icons.people_outline, label: 'Members', route: '/members'),
+          _DrawerItem(icon: Icons.church_outlined, label: 'Leadership', route: '/leadership'),
+          _DrawerItem(icon: Icons.event_outlined, label: 'Events', route: '/events'),
+          _DrawerItem(
+            icon: Icons.volunteer_activism_outlined,
+            label: 'Volunteers',
+            route: '/volunteers',
+          ),
+          _DrawerItem(icon: Icons.payments_outlined, label: 'Giving', route: '/giving'),
+          const Spacer(),
+          const Divider(),
+          ListTile(
+            leading: const Icon(Icons.logout, color: Colors.red),
+            title: const Text('Logout', style: TextStyle(color: Colors.red)),
+            onTap: () {
+              context.read<AuthProvider>().logout();
+              context.go('/');
+            },
+          ),
+          const SizedBox(height: 20),
+        ],
+      ),
+    );
+  }
+}
+
 class AppScaffold extends StatelessWidget {
   final String title;
   final Widget body;
@@ -12,49 +63,10 @@ class AppScaffold extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final user = context.watch<AuthProvider>().user;
-
     return Scaffold(
       backgroundColor: const Color(0xFFF8FAFC),
       appBar: AppBar(title: Text(title), actions: actions),
-      drawer: Drawer(
-        child: Column(
-          children: [
-            UserAccountsDrawerHeader(
-              decoration: const BoxDecoration(color: Color(0xFF1E293B)),
-              accountName: Text(user?.fullName ?? 'User'),
-              accountEmail: Text(user?.email ?? ''),
-              currentAccountPicture: CircleAvatar(
-                backgroundColor: const Color(0xFF3B82F6),
-                child: Text(
-                  user?.initials ?? 'U',
-                  style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
-                ),
-              ),
-            ),
-            _DrawerItem(icon: Icons.dashboard_outlined, label: 'Dashboard', route: '/dashboard'),
-            _DrawerItem(icon: Icons.people_outline, label: 'Members', route: '/members'),
-            _DrawerItem(icon: Icons.event_outlined, label: 'Events', route: '/events'),
-            _DrawerItem(
-              icon: Icons.volunteer_activism_outlined,
-              label: 'Volunteers',
-              route: '/volunteers',
-            ),
-            _DrawerItem(icon: Icons.payments_outlined, label: 'Giving', route: '/giving'),
-            const Spacer(),
-            const Divider(),
-            ListTile(
-              leading: const Icon(Icons.logout, color: Colors.red),
-              title: const Text('Logout', style: TextStyle(color: Colors.red)),
-              onTap: () {
-                context.read<AuthProvider>().logout();
-                context.go('/');
-              },
-            ),
-            const SizedBox(height: 20),
-          ],
-        ),
-      ),
+      drawer: const AppDrawer(),
       body: body,
     );
   }
@@ -84,7 +96,7 @@ class _DrawerItem extends StatelessWidget {
       tileColor: isActive ? const Color(0xFFEFF6FF) : null,
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
       onTap: () {
-        Navigator.pop(context); // close the drawer first
+        Navigator.pop(context);
         context.go(route);
       },
     );
