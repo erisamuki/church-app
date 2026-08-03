@@ -2,9 +2,12 @@ const express = require('express');
 const router = express.Router();
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
+const crypto = require('crypto');
 const Joi = require('joi');
+const rateLimit = require('express-rate-limit');
 const { query } = require('../database/connection');
-const { authenticate } = require('../middleware/auth');
+const { authenticate, authorize } = require('../middleware/auth');
+const { sendPasswordResetEmail } = require('../services/email.service');
 
 const loginSchema = Joi.object({
   email: Joi.string().email().required(),
@@ -21,8 +24,34 @@ const registerSchema = Joi.object({
   role: Joi.string().valid('admin', 'pastor', 'staff').default('staff')
 });
 
+const forgotPasswordSchema = Joi.object({
+  email: Joi.string().email().required()
+});
+
+const resetPasswordSchema = Joi.object({
+  email: Joi.string().email().required(),
+  code: Joi.string().length(6).required(),
+  new_password: Joi.string().min(8).required()
+});
+
+const loginLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  max: 5,
+  message: { success: false, message: 'Too many login attempts. Please try again in 15 minutes.' },
+  standardHeaders: true,
+  legacyHeaders: false,
+});
+
+const forgotPasswordLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  max: 3,
+  message: { success: false, message: 'Too many reset requests. Please try again in 15 minutes.' },
+  standardHeaders: true,
+  legacyHeaders: false,
+});
+
 // POST /api/auth/login
-router.post('/login', async (req, res, next) => {
+router.post('/login', loginLimiter, async (req, res, next) => {
   try {
     const { error } = loginSchema.validate(req.body);
     if (error) return res.status(400).json({ success: false, message: error.details[0].message });
@@ -70,8 +99,8 @@ router.post('/login', async (req, res, next) => {
   } catch (err) { next(err); }
 });
 
-// POST /api/auth/register
-router.post('/register', async (req, res, next) => {
+// POST /api/auth/register  (admin-only)
+router.post('/register', authenticate, authorize('admin'), async (req, res, next) => {
   try {
     const { error } = registerSchema.validate(req.body);
     if (error) return res.status(400).json({ success: false, message: error.details[0].message });
@@ -91,6 +120,77 @@ router.post('/register', async (req, res, next) => {
     );
 
     res.status(201).json({ success: true, user: result.rows[0] });
+  } catch (err) { next(err); }
+});
+
+// POST /api/auth/forgot-password
+router.post('/forgot-password', forgotPasswordLimiter, async (req, res, next) => {
+  try {
+    const { error } = forgotPasswordSchema.validate(req.body);
+    if (error) return res.status(400).json({ success: false, message: error.details[0].message });
+
+    const { email } = req.body;
+    const result = await query(
+      'SELECT id, first_name, email FROM users WHERE email = $1',
+      [email.toLowerCase()]
+    );
+
+    // Always respond success, even if email not found — avoids leaking which emails are registered
+    if (result.rows.length === 0) {
+      return res.json({ success: true, message: 'If that email is registered, a reset code has been sent.' });
+    }
+
+    const user = result.rows[0];
+    const code = crypto.randomInt(100000, 999999).toString(); // 6-digit code
+    const hashedCode = crypto.createHash('sha256').update(code).digest('hex');
+    const expires = new Date(Date.now() + 60 * 60 * 1000); // 1 hour
+
+    await query(
+      'UPDATE users SET reset_token = $1, reset_token_expires = $2 WHERE id = $3',
+      [hashedCode, expires, user.id]
+    );
+
+    await sendPasswordResetEmail(user.email, user.first_name, code);
+
+    res.json({ success: true, message: 'If that email is registered, a reset code has been sent.' });
+  } catch (err) { next(err); }
+});
+
+// POST /api/auth/reset-password
+router.post('/reset-password', async (req, res, next) => {
+  try {
+    const { error } = resetPasswordSchema.validate(req.body);
+    if (error) return res.status(400).json({ success: false, message: error.details[0].message });
+
+    const { email, code, new_password } = req.body;
+    const hashedCode = crypto.createHash('sha256').update(code).digest('hex');
+
+    const result = await query(
+      `SELECT id, reset_token, reset_token_expires FROM users WHERE email = $1`,
+      [email.toLowerCase()]
+    );
+
+    if (result.rows.length === 0) {
+      return res.status(400).json({ success: false, message: 'Invalid or expired code.' });
+    }
+
+    const user = result.rows[0];
+    if (
+      !user.reset_token ||
+      user.reset_token !== hashedCode ||
+      !user.reset_token_expires ||
+      new Date(user.reset_token_expires) < new Date()
+    ) {
+      return res.status(400).json({ success: false, message: 'Invalid or expired code.' });
+    }
+
+    const hashedPassword = await bcrypt.hash(new_password, 12);
+    await query(
+      'UPDATE users SET password_hash = $1, reset_token = NULL, reset_token_expires = NULL WHERE id = $2',
+      [hashedPassword, user.id]
+    );
+
+    res.json({ success: true, message: 'Password reset successfully. You can now log in.' });
   } catch (err) { next(err); }
 });
 

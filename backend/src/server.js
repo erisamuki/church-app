@@ -9,7 +9,9 @@ const { pool } = require('./database/connection');
 const errorHandler = require('./middleware/errorHandler');
 
 const authRoutes = require('./routes/auth.routes');
+const notificationRoutes = require('./routes/notification.routes');
 const memberRoutes = require('./routes/member.routes');
+const ministerRoutes = require('./routes/minister.routes');
 const eventRoutes = require('./routes/event.routes');
 const givingRoutes = require('./routes/giving.routes');
 const volunteerRoutes = require('./routes/volunteer.routes');
@@ -45,6 +47,8 @@ app.get('/health', async (req, res) => {
 
 app.use('/api/auth', authRoutes);
 app.use('/api/members', memberRoutes);
+app.use('/api/notifications', notificationRoutes);
+app.use('/api/ministers', ministerRoutes);
 app.use('/api/events', eventRoutes);
 app.use('/api/giving', givingRoutes);
 app.use('/api/volunteers', volunteerRoutes);

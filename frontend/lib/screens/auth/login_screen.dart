@@ -2,6 +2,7 @@
 import 'package:provider/provider.dart';
 import '../../providers/auth_provider.dart';
 import '../../utils/theme.dart';
+import 'forgot_password_screen.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -194,7 +195,11 @@ class _LoginScreenState extends State<LoginScreen> {
                           alignment: Alignment.centerRight,
                           child: TextButton(
                             onPressed: () {
-                              // TODO: Navigate to forgot password
+                              Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                    builder: (context) => const ForgotPasswordScreen()),
+                              );
                             },
                             style: TextButton.styleFrom(
                               foregroundColor: BCCTheme.orange,
@@ -206,7 +211,6 @@ class _LoginScreenState extends State<LoginScreen> {
                           ),
                         ),
                         const SizedBox(height: 20),
-
                         // Login Button
                         SizedBox(
                           width: double.infinity,
@@ -297,4 +301,3 @@ class _LoginScreenState extends State<LoginScreen> {
     );
   }
 }
-

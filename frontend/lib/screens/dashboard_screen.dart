@@ -10,6 +10,7 @@ import '../utils/theme.dart';
 import '../widgets/app_scaffold.dart';
 import 'add_event_screen.dart';
 import 'log_offering_screen.dart';
+import '../widgets/notifications_panel.dart';
 
 class DashboardScreen extends StatefulWidget {
   const DashboardScreen({super.key});
@@ -193,36 +194,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
               ),
             ),
           ),
-          Stack(
-            children: [
-              IconButton(
-                icon: const Icon(Icons.notifications_outlined, color: BCCTheme.midGray),
-                onPressed: () {},
-              ),
-              Positioned(
-                top: 8,
-                right: 8,
-                child: Container(
-                  width: 18,
-                  height: 18,
-                  decoration: const BoxDecoration(
-                    color: BCCTheme.orange,
-                    shape: BoxShape.circle,
-                  ),
-                  child: const Center(
-                    child: Text(
-                      '3',
-                      style: TextStyle(
-                        color: BCCTheme.white,
-                        fontSize: 10,
-                        fontWeight: FontWeight.w700,
-                      ),
-                    ),
-                  ),
-                ),
-              ),
-            ],
-          ),
+          const NotificationsBell(),
           Padding(
             padding: const EdgeInsets.only(right: 16),
             child: CircleAvatar(
