@@ -33,13 +33,21 @@ class _LoginScreenState extends State<LoginScreen> {
     if (!_formKey.currentState!.validate()) return;
 
     final auth = context.read<AuthProvider>();
-    final success = await auth.login(_emailController.text.trim(), _passwordController.text);
+    final success = await auth.login(
+      _emailController.text.trim(),
+      _passwordController.text,
+    );
 
-    if (success && mounted) {
+    // Guard context access across async gap
+    if (!mounted) return;
+
+    if (success) {
+      // User successfully authenticated.
+      // Your App Router or AuthProvider stream will automatically redirect to Dashboard.
       return;
     }
 
-    if (mounted && auth.error != null) {
+    if (auth.error != null) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text(auth.error!),
@@ -51,7 +59,7 @@ class _LoginScreenState extends State<LoginScreen> {
     }
   }
 
-  // Up/Down arrows move focus between fields, like a standard form
+  // Keyboard navigation for desktop/web & accessibility key input
   KeyEventResult _handleKeyEvent(FocusNode node, KeyEvent event) {
     if (event is KeyDownEvent) {
       if (event.logicalKey == LogicalKeyboardKey.arrowDown) {
@@ -80,7 +88,7 @@ class _LoginScreenState extends State<LoginScreen> {
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                // Brand Logo
+                // Brand Logo Container
                 Container(
                   width: 64,
                   height: 64,
@@ -122,6 +130,7 @@ class _LoginScreenState extends State<LoginScreen> {
                 ),
                 const SizedBox(height: 40),
 
+                // Form Card
                 Container(
                   padding: const EdgeInsets.all(28),
                   decoration: BoxDecoration(
@@ -148,7 +157,9 @@ class _LoginScreenState extends State<LoginScreen> {
                           Text(
                             'Sign in to manage your church',
                             style: TextStyle(
-                                color: BCCTheme.white.withValues(alpha: 0.45), fontSize: 14),
+                              color: BCCTheme.white.withValues(alpha: 0.45),
+                              fontSize: 14,
+                            ),
                           ),
                           const SizedBox(height: 24),
 
@@ -217,6 +228,7 @@ class _LoginScreenState extends State<LoginScreen> {
                           ),
                           const SizedBox(height: 8),
 
+                          // Forgot Password Link
                           Align(
                             alignment: Alignment.centerRight,
                             child: TextButton(
@@ -224,7 +236,8 @@ class _LoginScreenState extends State<LoginScreen> {
                                 Navigator.push(
                                   context,
                                   MaterialPageRoute(
-                                      builder: (context) => const ForgotPasswordScreen()),
+                                    builder: (context) => const ForgotPasswordScreen(),
+                                  ),
                                 );
                               },
                               style: TextButton.styleFrom(
@@ -238,6 +251,7 @@ class _LoginScreenState extends State<LoginScreen> {
                           ),
                           const SizedBox(height: 20),
 
+                          // Submit Button
                           SizedBox(
                             width: double.infinity,
                             height: 48,
@@ -247,8 +261,9 @@ class _LoginScreenState extends State<LoginScreen> {
                                 backgroundColor: BCCTheme.orange,
                                 foregroundColor: BCCTheme.white,
                                 elevation: 0,
-                                shape:
-                                    RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(8),
+                                ),
                                 disabledBackgroundColor: BCCTheme.orange.withValues(alpha: 0.5),
                               ),
                               child: auth.isLoading
@@ -262,7 +277,10 @@ class _LoginScreenState extends State<LoginScreen> {
                                     )
                                   : const Text(
                                       'Sign In',
-                                      style: TextStyle(fontSize: 15, fontWeight: FontWeight.w600),
+                                      style: TextStyle(
+                                        fontSize: 15,
+                                        fontWeight: FontWeight.w600,
+                                      ),
                                     ),
                             ),
                           ),
@@ -274,8 +292,11 @@ class _LoginScreenState extends State<LoginScreen> {
 
                 const SizedBox(height: 24),
                 Text(
-                  'Blessed Christian Church (c) 2026',
-                  style: TextStyle(color: BCCTheme.white.withValues(alpha: 0.25), fontSize: 12),
+                  'Blessed Christian Church © 2026',
+                  style: TextStyle(
+                    color: BCCTheme.white.withValues(alpha: 0.25),
+                    fontSize: 12,
+                  ),
                 ),
               ],
             ),

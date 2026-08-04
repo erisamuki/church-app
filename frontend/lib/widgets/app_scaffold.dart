@@ -28,16 +28,20 @@ class AppDrawer extends StatelessWidget {
               ),
             ),
           ),
-          _DrawerItem(icon: Icons.dashboard_outlined, label: 'Dashboard', route: '/dashboard'),
-          _DrawerItem(icon: Icons.people_outline, label: 'Members', route: '/members'),
-          _DrawerItem(icon: Icons.church_outlined, label: 'Leadership', route: '/leadership'),
-          _DrawerItem(icon: Icons.event_outlined, label: 'Events', route: '/events'),
-          _DrawerItem(
+          const _DrawerItem(
+              icon: Icons.dashboard_outlined, label: 'Dashboard', route: '/dashboard'),
+          const _DrawerItem(icon: Icons.people_outline, label: 'Members', route: '/members'),
+          const _DrawerItem(icon: Icons.church_outlined, label: 'Leadership', route: '/leadership'),
+          const _DrawerItem(icon: Icons.event_outlined, label: 'Events', route: '/events'),
+          const _DrawerItem(
             icon: Icons.volunteer_activism_outlined,
             label: 'Volunteers',
             route: '/volunteers',
           ),
-          _DrawerItem(icon: Icons.payments_outlined, label: 'Giving', route: '/giving'),
+          const _DrawerItem(icon: Icons.payments_outlined, label: 'Giving', route: '/giving'),
+          const _DrawerItem(icon: Icons.headset_outlined, label: 'Sermons', route: '/sermons'),
+          const _DrawerItem(
+              icon: Icons.campaign_outlined, label: 'Communications', route: '/communications'),
           const Spacer(),
           const Divider(),
           Consumer<ThemeProvider>(

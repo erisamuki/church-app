@@ -39,15 +39,15 @@ class User {
   }
 
   Map<String, dynamic> toJson() => {
-    'id': id,
-    'email': email,
-    'full_name': fullName,
-    'role': role,
-    'phone': phone,
-    'department': department,
-    'avatar_url': avatarUrl,
-    'created_at': createdAt.toIso8601String(),
-  };
+        'id': id,
+        'email': email,
+        'full_name': fullName,
+        'role': role,
+        'phone': phone,
+        'department': department,
+        'avatar_url': avatarUrl,
+        'created_at': createdAt.toIso8601String(),
+      };
 
   String get initials {
     final parts = fullName.trim().split(' ');
@@ -59,9 +59,12 @@ class User {
 }
 
 class AuthProvider extends ChangeNotifier {
-  final String baseUrl; // e.g., 'http://localhost:3000/api'
+  final String baseUrl;
 
-  AuthProvider({required this.baseUrl});
+  // Defaults directly to your live Render environment
+  AuthProvider({
+    this.baseUrl = 'https://church-app-mq1b.onrender.com/api',
+  });
 
   User? _user;
   String? _token;
@@ -97,19 +100,28 @@ class AuthProvider extends ChangeNotifier {
     _error = null;
 
     try {
-      final response = await http.post(
-        Uri.parse('$baseUrl/auth/login'),
-        headers: {'Content-Type': 'application/json'},
-        body: jsonEncode({'email': email.trim(), 'password': password}),
-      );
+      final response = await http
+          .post(
+            Uri.parse('$baseUrl/auth/login'),
+            headers: {'Content-Type': 'application/json'},
+            body: jsonEncode({
+              'email': email.trim(),
+              'password': password,
+            }),
+          )
+          .timeout(const Duration(seconds: 15));
 
       final data = jsonDecode(response.body);
 
-      if (response.statusCode == 200 && data['token'] != null) {
-        _token = data['token'];
-        _user = User.fromJson(data['user']);
+      if (response.statusCode == 200 && (data['token'] != null || data['accessToken'] != null)) {
+        _token = data['token'] ?? data['accessToken'];
 
-        // Persist to local storage
+        // Handles { user: ... } or nested { data: { user: ... } } response formats
+        final userData =
+            data['user'] ?? (data['data'] != null ? data['data']['user'] : null) ?? data['data'];
+        _user = User.fromJson(userData);
+
+        // Persist session to local storage
         final prefs = await SharedPreferences.getInstance();
         await prefs.setString('bcc_auth_token', _token!);
         await prefs.setString('bcc_user_data', jsonEncode(_user!.toJson()));
@@ -122,13 +134,13 @@ class AuthProvider extends ChangeNotifier {
         return false;
       }
     } catch (e) {
-      _error = 'Network error. Check your connection.';
+      _error = 'Unable to connect to GraceHub API server. Please check your internet connection.';
       _setLoading(false);
       return false;
     }
   }
 
-  /// Logout and clear all stored data
+  /// Logout and clear all stored session data
   Future<void> logout() async {
     _token = null;
     _user = null;
@@ -141,22 +153,32 @@ class AuthProvider extends ChangeNotifier {
     notifyListeners();
   }
 
-  /// Get auth headers for API requests
+  /// Get headers for authenticated API requests
   Map<String, String> get authHeaders => {
-    'Content-Type': 'application/json',
-    if (_token != null) 'Authorization': 'Bearer $_token',
-  };
+        'Content-Type': 'application/json',
+        if (_token != null) 'Authorization': 'Bearer $_token',
+      };
 
   /// Fetch current user profile (useful for refreshing data)
   Future<bool> fetchCurrentUser() async {
     if (_token == null) return false;
 
     try {
-      final response = await http.get(Uri.parse('$baseUrl/auth/me'), headers: authHeaders);
+      final response = await http
+          .get(Uri.parse('$baseUrl/auth/me'), headers: authHeaders)
+          .timeout(const Duration(seconds: 10));
 
       if (response.statusCode == 200) {
         final data = jsonDecode(response.body);
-        _user = User.fromJson(data['user'] ?? data);
+        final userData =
+            data['user'] ?? (data['data'] != null ? data['data']['user'] : null) ?? data;
+
+        _user = User.fromJson(userData);
+
+        // Update local storage cache
+        final prefs = await SharedPreferences.getInstance();
+        await prefs.setString('bcc_user_data', jsonEncode(_user!.toJson()));
+
         notifyListeners();
         return true;
       }
@@ -176,4 +198,3 @@ class AuthProvider extends ChangeNotifier {
     notifyListeners();
   }
 }
-

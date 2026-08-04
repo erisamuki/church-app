@@ -2,6 +2,8 @@
 import 'package:provider/provider.dart';
 import 'package:go_router/go_router.dart';
 import 'providers/auth_provider.dart';
+import 'providers/sermons_provider.dart';
+import 'providers/communications_provider.dart';
 import 'utils/theme.dart';
 import 'utils/app_router.dart';
 import 'providers/theme_provider.dart';
@@ -9,11 +11,12 @@ import 'providers/theme_provider.dart';
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
-  // Initialize auth provider and check for stored session
+  // Initialize auth provider with live Render API endpoint
   final authProvider = AuthProvider(
-    baseUrl: 'http://localhost:3000/api', // Change to your Node.js API URL
+    baseUrl: 'https://church-app-mq1b.onrender.com/api',
   );
   await authProvider.initialize();
+
   final themeProvider = ThemeProvider();
   await themeProvider.initialize();
 
@@ -22,19 +25,34 @@ void main() async {
       providers: [
         ChangeNotifierProvider<AuthProvider>.value(value: authProvider),
         ChangeNotifierProvider<ThemeProvider>.value(value: themeProvider),
-        // Add other providers here as you build them
-        // ChangeNotifierProvider(create: (_) => MembersProvider()),
-        // ChangeNotifierProvider(create: (_) => EventsProvider()),
-        // ChangeNotifierProvider(create: (_) => FinanceProvider()),
+
+        // Sermons Provider Proxy
+        ChangeNotifierProxyProvider<AuthProvider, SermonsProvider>(
+          create: (context) => SermonsProvider(
+            authProvider: context.read<AuthProvider>(),
+          ),
+          update: (context, auth, previous) => SermonsProvider(
+            authProvider: auth,
+          )..fetchSermons(),
+        ),
+
+        // Communications Provider Proxy
+        ChangeNotifierProxyProvider<AuthProvider, CommunicationsProvider>(
+          create: (context) => CommunicationsProvider(
+            authProvider: context.read<AuthProvider>(),
+          ),
+          update: (context, auth, previous) => CommunicationsProvider(
+            authProvider: auth,
+          )..fetchCommunications(),
+        ),
       ],
-      child: BCCApp(authProvider: authProvider),
+      child: const BCCApp(),
     ),
   );
 }
 
 class BCCApp extends StatefulWidget {
-  final AuthProvider authProvider;
-  const BCCApp({super.key, required this.authProvider});
+  const BCCApp({super.key});
 
   @override
   State<BCCApp> createState() => _BCCAppState();
@@ -46,7 +64,9 @@ class _BCCAppState extends State<BCCApp> {
   @override
   void initState() {
     super.initState();
-    _router = AppRouter.build(widget.authProvider);
+    // Access authProvider via context to maintain proper provider lifecycle bindings
+    final authProvider = context.read<AuthProvider>();
+    _router = AppRouter.build(authProvider);
   }
 
   @override

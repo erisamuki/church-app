@@ -24,26 +24,72 @@ class AppRouter {
       redirect: (context, state) {
         final isLoginRoute = state.matchedLocation == '/';
 
+        // Unauthenticated users are redirected to login
         if (!auth.isAuthenticated && !isLoginRoute) return '/';
+        // Authenticated users are redirected away from login to dashboard
         if (auth.isAuthenticated && isLoginRoute) return '/dashboard';
+
         return null;
       },
       routes: [
-        GoRoute(path: '/', builder: (context, state) => const LoginScreen()),
-        GoRoute(path: '/volunteers', builder: (context, state) => const VolunteersScreen()),
-        GoRoute(path: '/checkin', builder: (context, state) => const EventPickerScreen()),
-        GoRoute(path: '/giving', builder: (context, state) => const GivingScreen()),
-        GoRoute(path: '/leadership', builder: (context, state) => const MinistersScreen()),
-        GoRoute(path: '/search', builder: (context, state) => const SearchScreen()),
-        GoRoute(path: '/dashboard', builder: (context, state) => const DashboardScreen()),
-        GoRoute(path: '/members', builder: (context, state) => const MembersListScreen()),
-        GoRoute(path: '/members/new', builder: (context, state) => const AddMemberScreen()),
         GoRoute(
-          path: '/members/:id',
-          builder: (context, state) => MemberDetailScreen(memberId: state.pathParameters['id']!),
+          path: '/',
+          builder: (context, state) => const LoginScreen(),
         ),
-        GoRoute(path: '/events', builder: (context, state) => const EventsScreen()),
+        GoRoute(
+          path: '/dashboard',
+          builder: (context, state) => const DashboardScreen(),
+        ),
+        GoRoute(
+          path: '/volunteers',
+          builder: (context, state) => const VolunteersScreen(),
+        ),
+        GoRoute(
+          path: '/checkin',
+          builder: (context, state) => const EventPickerScreen(),
+        ),
+        GoRoute(
+          path: '/giving',
+          builder: (context, state) => const GivingScreen(),
+        ),
+        GoRoute(
+          path: '/leadership',
+          builder: (context, state) => const MinistersScreen(),
+        ),
+        GoRoute(
+          path: '/search',
+          builder: (context, state) => const SearchScreen(),
+        ),
+        GoRoute(
+          path: '/events',
+          builder: (context, state) => const EventsScreen(),
+        ),
+
+        // Nested/Hierarchical Member Routes
+        GoRoute(
+          path: '/members',
+          builder: (context, state) => const MembersListScreen(),
+          routes: [
+            GoRoute(
+              path: 'new',
+              builder: (context, state) => const AddMemberScreen(),
+            ),
+            GoRoute(
+              path: ':id',
+              builder: (context, state) {
+                final id = state.pathParameters['id'] ?? '';
+                return MemberDetailScreen(memberId: id);
+              },
+            ),
+          ],
+        ),
       ],
+      // Fallback route handling for unmatched paths
+      errorBuilder: (context, state) => Scaffold(
+        body: Center(
+          child: Text('Page not found: ${state.error}'),
+        ),
+      ),
     );
   }
 }
