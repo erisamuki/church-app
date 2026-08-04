@@ -22,13 +22,35 @@ const groupRoutes = require('./routes/group.routes');
 
 const app = express();
 
+// Required on hosting platforms like Render behind reverse proxies
+app.set('trust proxy', 1);
+
 app.use(helmet());
-app.use(cors({ origin: process.env.FRONTEND_URL || '*', credentials: true }));
+
+// Dynamic CORS configuration allowing custom frontends or development fallbacks
+const allowedOrigin = process.env.FRONTEND_URL;
+app.use(
+  cors({
+    origin: (origin, callback) => {
+      // Allow requests with no origin (like mobile apps, curl, or Postman)
+      if (!origin || !allowedOrigin || allowedOrigin === '*') {
+        return callback(null, true);
+      }
+      if (origin === allowedOrigin) {
+        return callback(null, true);
+      }
+      return callback(new Error('Not allowed by CORS'));
+    },
+    credentials: true,
+  })
+);
 
 const limiter = rateLimit({
   windowMs: 15 * 60 * 1000,
   max: 100,
-  message: 'Too many requests, please try again later.'
+  message: { success: false, message: 'Too many requests, please try again later.' },
+  standardHeaders: true,
+  legacyHeaders: false,
 });
 app.use('/api/', limiter);
 
@@ -36,20 +58,38 @@ app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true }));
 app.use(morgan(process.env.NODE_ENV === 'production' ? 'combined' : 'dev'));
 
+// Silent handling for favicon requests to prevent log noise
+app.get('/favicon.ico', (req, res) => res.status(204).end());
+
+// Root Landing Endpoint
+app.get('/', (req, res) => {
+  res.json({
+    name: 'GraceHub API',
+    status: 'online',
+    healthCheck: '/health',
+    apiBase: '/api',
+  });
+});
+
+// Health Check Endpoint
 app.get('/health', async (req, res) => {
   try {
     await pool.query('SELECT NOW()');
     res.json({ status: 'ok', database: 'connected' });
   } catch (err) {
-    console.error('Health check DB error:', JSON.stringify({
-      message: err && err.message,
-      code: err && err.code,
-      name: err && err.name
-    }));
+    console.error(
+      'Health check DB error:',
+      JSON.stringify({
+        message: err && err.message,
+        code: err && err.code,
+        name: err && err.name,
+      })
+    );
     res.status(503).json({ status: 'error', database: 'disconnected' });
   }
 });
 
+// API Routes
 app.use('/api/auth', authRoutes);
 app.use('/api/members', memberRoutes);
 app.use('/api/notifications', notificationRoutes);
@@ -62,6 +102,7 @@ app.use('/api/dashboard', dashboardRoutes);
 app.use('/api/sermons', sermonRoutes);
 app.use('/api/groups', groupRoutes);
 
+// Global Error & 404 Handlers
 app.use(errorHandler);
 app.use((req, res) => {
   res.status(404).json({ success: false, message: 'Route not found' });
