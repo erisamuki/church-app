@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 import 'providers/auth_provider.dart';
 import 'utils/theme.dart';
 import 'utils/app_router.dart';
+import 'providers/theme_provider.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -13,11 +14,14 @@ void main() async {
     baseUrl: 'http://localhost:3000/api', // Change to your Node.js API URL
   );
   await authProvider.initialize();
+  final themeProvider = ThemeProvider();
+  await themeProvider.initialize();
 
   runApp(
     MultiProvider(
       providers: [
         ChangeNotifierProvider<AuthProvider>.value(value: authProvider),
+        ChangeNotifierProvider<ThemeProvider>.value(value: themeProvider),
         // Add other providers here as you build them
         // ChangeNotifierProvider(create: (_) => MembersProvider()),
         // ChangeNotifierProvider(create: (_) => EventsProvider()),
@@ -52,7 +56,7 @@ class _BCCAppState extends State<BCCApp> {
       debugShowCheckedModeBanner: false,
       theme: BCCTheme.lightTheme,
       darkTheme: BCCTheme.darkTheme,
-      themeMode: ThemeMode.light,
+      themeMode: context.watch<ThemeProvider>().themeMode,
       routerConfig: _router,
     );
   }

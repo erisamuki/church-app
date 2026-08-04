@@ -1,4 +1,5 @@
 ﻿import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 import '../../providers/auth_provider.dart';
 import '../../utils/theme.dart';
@@ -15,12 +16,16 @@ class _LoginScreenState extends State<LoginScreen> {
   final _formKey = GlobalKey<FormState>();
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
+  final _emailFocus = FocusNode();
+  final _passwordFocus = FocusNode();
   bool _obscurePassword = true;
 
   @override
   void dispose() {
     _emailController.dispose();
     _passwordController.dispose();
+    _emailFocus.dispose();
+    _passwordFocus.dispose();
     super.dispose();
   }
 
@@ -31,7 +36,6 @@ class _LoginScreenState extends State<LoginScreen> {
     final success = await auth.login(_emailController.text.trim(), _passwordController.text);
 
     if (success && mounted) {
-      // Navigation handled by router listening to auth state
       return;
     }
 
@@ -45,6 +49,21 @@ class _LoginScreenState extends State<LoginScreen> {
         ),
       );
     }
+  }
+
+  // Up/Down arrows move focus between fields, like a standard form
+  KeyEventResult _handleKeyEvent(FocusNode node, KeyEvent event) {
+    if (event is KeyDownEvent) {
+      if (event.logicalKey == LogicalKeyboardKey.arrowDown) {
+        FocusScope.of(context).nextFocus();
+        return KeyEventResult.handled;
+      }
+      if (event.logicalKey == LogicalKeyboardKey.arrowUp) {
+        FocusScope.of(context).previousFocus();
+        return KeyEventResult.handled;
+      }
+    }
+    return KeyEventResult.ignored;
   }
 
   @override
@@ -83,7 +102,6 @@ class _LoginScreenState extends State<LoginScreen> {
                 ),
                 const SizedBox(height: 20),
 
-                // Church Name
                 const Text(
                   'Blessed Christian Church',
                   style: TextStyle(
@@ -104,7 +122,6 @@ class _LoginScreenState extends State<LoginScreen> {
                 ),
                 const SizedBox(height: 40),
 
-                // Login Card
                 Container(
                   padding: const EdgeInsets.all(28),
                   decoration: BoxDecoration(
@@ -112,141 +129,152 @@ class _LoginScreenState extends State<LoginScreen> {
                     borderRadius: BorderRadius.circular(12),
                     border: Border.all(color: BCCTheme.white.withValues(alpha: 0.08)),
                   ),
-                  child: Form(
-                    key: _formKey,
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        const Text(
-                          'Welcome back, Pastor',
-                          style: TextStyle(
-                            color: BCCTheme.white,
-                            fontSize: 18,
-                            fontWeight: FontWeight.w600,
-                          ),
-                        ),
-                        const SizedBox(height: 4),
-                        Text(
-                          'Sign in to manage your church',
-                          style: TextStyle(
-                              color: BCCTheme.white.withValues(alpha: 0.45), fontSize: 14),
-                        ),
-                        const SizedBox(height: 24),
-
-                        // Email Field
-                        _buildLabel('Email address'),
-                        const SizedBox(height: 6),
-                        TextFormField(
-                          controller: _emailController,
-                          keyboardType: TextInputType.emailAddress,
-                          style: const TextStyle(color: BCCTheme.white),
-                          decoration: _inputDecoration(
-                            hintText: 'pastor@bccmukono.org',
-                            icon: Icons.email_outlined,
-                          ),
-                          validator: (value) {
-                            if (value == null || value.trim().isEmpty) {
-                              return 'Please enter your email';
-                            }
-                            if (!value.contains('@')) {
-                              return 'Please enter a valid email';
-                            }
-                            return null;
-                          },
-                        ),
-                        const SizedBox(height: 18),
-
-                        // Password Field
-                        _buildLabel('Password'),
-                        const SizedBox(height: 6),
-                        TextFormField(
-                          controller: _passwordController,
-                          obscureText: _obscurePassword,
-                          style: const TextStyle(color: BCCTheme.white),
-                          decoration: _inputDecoration(
-                            hintText: 'Enter your password',
-                            icon: Icons.lock_outline,
-                            suffix: IconButton(
-                              icon: Icon(
-                                _obscurePassword
-                                    ? Icons.visibility_off_outlined
-                                    : Icons.visibility_outlined,
-                                color: BCCTheme.white.withValues(alpha: 0.4),
-                                size: 20,
-                              ),
-                              onPressed: () {
-                                setState(() {
-                                  _obscurePassword = !_obscurePassword;
-                                });
-                              },
+                  child: Focus(
+                    onKeyEvent: _handleKeyEvent,
+                    child: Form(
+                      key: _formKey,
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          const Text(
+                            'Welcome back, Pastor',
+                            style: TextStyle(
+                              color: BCCTheme.white,
+                              fontSize: 18,
+                              fontWeight: FontWeight.w600,
                             ),
                           ),
-                          validator: (value) {
-                            if (value == null || value.length < 6) {
-                              return 'Password must be at least 6 characters';
-                            }
-                            return null;
-                          },
-                        ),
-                        const SizedBox(height: 8),
+                          const SizedBox(height: 4),
+                          Text(
+                            'Sign in to manage your church',
+                            style: TextStyle(
+                                color: BCCTheme.white.withValues(alpha: 0.45), fontSize: 14),
+                          ),
+                          const SizedBox(height: 24),
 
-                        // Forgot Password
-                        Align(
-                          alignment: Alignment.centerRight,
-                          child: TextButton(
-                            onPressed: () {
-                              Navigator.push(
-                                context,
-                                MaterialPageRoute(
-                                    builder: (context) => const ForgotPasswordScreen()),
-                              );
+                          // Email Field
+                          _buildLabel('Email address'),
+                          const SizedBox(height: 6),
+                          TextFormField(
+                            controller: _emailController,
+                            focusNode: _emailFocus,
+                            keyboardType: TextInputType.emailAddress,
+                            textInputAction: TextInputAction.next,
+                            style: const TextStyle(color: BCCTheme.white),
+                            decoration: _inputDecoration(
+                              hintText: 'pastor@bccmukono.org',
+                              icon: Icons.email_outlined,
+                            ),
+                            onFieldSubmitted: (_) {
+                              FocusScope.of(context).requestFocus(_passwordFocus);
                             },
-                            style: TextButton.styleFrom(
-                              foregroundColor: BCCTheme.orange,
-                              padding: EdgeInsets.zero,
-                              minimumSize: Size.zero,
-                              tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                            ),
-                            child: const Text('Forgot password?', style: TextStyle(fontSize: 13)),
+                            validator: (value) {
+                              if (value == null || value.trim().isEmpty) {
+                                return 'Please enter your email';
+                              }
+                              if (!value.contains('@')) {
+                                return 'Please enter a valid email';
+                              }
+                              return null;
+                            },
                           ),
-                        ),
-                        const SizedBox(height: 20),
-                        // Login Button
-                        SizedBox(
-                          width: double.infinity,
-                          height: 48,
-                          child: ElevatedButton(
-                            onPressed: auth.isLoading ? null : _handleLogin,
-                            style: ElevatedButton.styleFrom(
-                              backgroundColor: BCCTheme.orange,
-                              foregroundColor: BCCTheme.white,
-                              elevation: 0,
-                              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
-                              disabledBackgroundColor: BCCTheme.orange.withValues(alpha: 0.5),
+                          const SizedBox(height: 18),
+
+                          // Password Field
+                          _buildLabel('Password'),
+                          const SizedBox(height: 6),
+                          TextFormField(
+                            controller: _passwordController,
+                            focusNode: _passwordFocus,
+                            obscureText: _obscurePassword,
+                            textInputAction: TextInputAction.done,
+                            style: const TextStyle(color: BCCTheme.white),
+                            decoration: _inputDecoration(
+                              hintText: 'Enter your password',
+                              icon: Icons.lock_outline,
+                              suffix: IconButton(
+                                icon: Icon(
+                                  _obscurePassword
+                                      ? Icons.visibility_off_outlined
+                                      : Icons.visibility_outlined,
+                                  color: BCCTheme.white.withValues(alpha: 0.4),
+                                  size: 20,
+                                ),
+                                onPressed: () {
+                                  setState(() {
+                                    _obscurePassword = !_obscurePassword;
+                                  });
+                                },
+                              ),
                             ),
-                            child: auth.isLoading
-                                ? const SizedBox(
-                                    width: 20,
-                                    height: 20,
-                                    child: CircularProgressIndicator(
-                                      strokeWidth: 2.5,
-                                      valueColor: AlwaysStoppedAnimation<Color>(BCCTheme.white),
+                            onFieldSubmitted: (_) => _handleLogin(),
+                            validator: (value) {
+                              if (value == null || value.length < 6) {
+                                return 'Password must be at least 6 characters';
+                              }
+                              return null;
+                            },
+                          ),
+                          const SizedBox(height: 8),
+
+                          Align(
+                            alignment: Alignment.centerRight,
+                            child: TextButton(
+                              onPressed: () {
+                                Navigator.push(
+                                  context,
+                                  MaterialPageRoute(
+                                      builder: (context) => const ForgotPasswordScreen()),
+                                );
+                              },
+                              style: TextButton.styleFrom(
+                                foregroundColor: BCCTheme.orange,
+                                padding: EdgeInsets.zero,
+                                minimumSize: Size.zero,
+                                tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                              ),
+                              child: const Text('Forgot password?', style: TextStyle(fontSize: 13)),
+                            ),
+                          ),
+                          const SizedBox(height: 20),
+
+                          SizedBox(
+                            width: double.infinity,
+                            height: 48,
+                            child: ElevatedButton(
+                              onPressed: auth.isLoading ? null : _handleLogin,
+                              style: ElevatedButton.styleFrom(
+                                backgroundColor: BCCTheme.orange,
+                                foregroundColor: BCCTheme.white,
+                                elevation: 0,
+                                shape:
+                                    RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                                disabledBackgroundColor: BCCTheme.orange.withValues(alpha: 0.5),
+                              ),
+                              child: auth.isLoading
+                                  ? const SizedBox(
+                                      width: 20,
+                                      height: 20,
+                                      child: CircularProgressIndicator(
+                                        strokeWidth: 2.5,
+                                        valueColor: AlwaysStoppedAnimation<Color>(BCCTheme.white),
+                                      ),
+                                    )
+                                  : const Text(
+                                      'Sign In',
+                                      style: TextStyle(fontSize: 15, fontWeight: FontWeight.w600),
                                     ),
-                                  )
-                                : const Text(
-                                    'Sign In',
-                                    style: TextStyle(fontSize: 15, fontWeight: FontWeight.w600),
-                                  ),
+                            ),
                           ),
-                        ),
-                      ],
+                        ],
+                      ),
                     ),
                   ),
                 ),
 
                 const SizedBox(height: 24),
                 Text(
-                  'Blessed Christian Church Â© 2026',
+                  'Blessed Christian Church (c) 2026',
                   style: TextStyle(color: BCCTheme.white.withValues(alpha: 0.25), fontSize: 12),
                 ),
               ],

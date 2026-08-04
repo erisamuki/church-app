@@ -46,10 +46,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
   }
 
   Future<void> _loadDashboardData() async {
-    setState(() {
-      _isLoading = true;
-    });
-
+    setState(() => _isLoading = true);
     try {
       final auth = context.read<AuthProvider>();
       final baseUrl = auth.baseUrl;
@@ -61,27 +58,15 @@ class _DashboardScreenState extends State<DashboardScreen> {
         _fetchNextEvent(baseUrl, headers),
       ]);
 
-      if (mounted) {
-        setState(() {
-          _isLoading = false;
-        });
-      }
+      if (mounted) setState(() => _isLoading = false);
     } catch (e) {
-      if (mounted) {
-        setState(() {
-          _isLoading = false;
-        });
-      }
+      if (mounted) setState(() => _isLoading = false);
     }
   }
 
   Future<void> _fetchStats(String baseUrl, Map<String, String> headers) async {
     try {
-      final response = await http.get(
-        Uri.parse('$baseUrl/dashboard/stats'),
-        headers: headers,
-      );
-
+      final response = await http.get(Uri.parse('$baseUrl/dashboard/stats'), headers: headers);
       if (response.statusCode == 200) {
         final json = jsonDecode(response.body);
         final data = json['data'] ?? json;
@@ -103,7 +88,6 @@ class _DashboardScreenState extends State<DashboardScreen> {
         Uri.parse('$baseUrl/members?limit=5&sort=joined_desc'),
         headers: headers,
       );
-
       if (response.statusCode == 200) {
         final json = jsonDecode(response.body);
         final List<dynamic> data = json['data'] ?? json;
@@ -122,14 +106,11 @@ class _DashboardScreenState extends State<DashboardScreen> {
         Uri.parse('$baseUrl/events?limit=1&status=upcoming&sort=start_date_asc'),
         headers: headers,
       );
-
       if (response.statusCode == 200) {
         final json = jsonDecode(response.body);
         final List<dynamic> data = json['data'] ?? json;
         if (data.isNotEmpty) {
-          setState(() {
-            _nextEvent = ChurchEvent.fromJson(data.first);
-          });
+          setState(() => _nextEvent = ChurchEvent.fromJson(data.first));
         }
       }
     } catch (e) {
@@ -140,10 +121,9 @@ class _DashboardScreenState extends State<DashboardScreen> {
   @override
   Widget build(BuildContext context) {
     if (_isLoading) {
-      return Scaffold(
-        backgroundColor: BCCTheme.lightGray,
-        drawer: const AppDrawer(),
-        body: const Center(
+      return const Scaffold(
+        drawer: AppDrawer(),
+        body: Center(
           child: CircularProgressIndicator(
             valueColor: AlwaysStoppedAnimation<Color>(BCCTheme.orange),
           ),
@@ -152,51 +132,14 @@ class _DashboardScreenState extends State<DashboardScreen> {
     }
 
     return Scaffold(
-      backgroundColor: BCCTheme.lightGray,
       drawer: const AppDrawer(),
       appBar: AppBar(
-        backgroundColor: BCCTheme.white,
-        elevation: 0,
-        title: const Text(
-          'Dashboard',
-          style: TextStyle(
-            fontSize: 20,
-            fontWeight: FontWeight.w600,
-            color: BCCTheme.darkGray,
-          ),
-        ),
+        title: const Text('Dashboard'),
         actions: [
-          InkWell(
-            onTap: () {
-              context.push('/search');
-            },
-            borderRadius: BorderRadius.circular(10),
-            child: Container(
-              margin: const EdgeInsets.only(right: 16),
-              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
-              decoration: BoxDecoration(
-                color: BCCTheme.lightGray,
-                borderRadius: BorderRadius.circular(10),
-                border: Border.all(color: BCCTheme.borderGray),
-              ),
-              child: const Row(
-                children: [
-                  Icon(Icons.search, size: 18, color: BCCTheme.midGray),
-                  SizedBox(width: 8),
-                  Text(
-                    'Search members, events...',
-                    style: TextStyle(
-                      fontSize: 14,
-                      color: BCCTheme.midGray,
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          ),
+          const _SearchBarAction(),
           const NotificationsBell(),
           Padding(
-            padding: const EdgeInsets.only(right: 16),
+            padding: const EdgeInsets.only(right: 16, left: 8),
             child: CircleAvatar(
               radius: 18,
               backgroundColor: BCCTheme.orange,
@@ -223,7 +166,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              _buildStatsGrid(),
+              _buildStatsGrid(context),
               const SizedBox(height: 20),
               LayoutBuilder(
                 builder: (context, constraints) {
@@ -231,17 +174,17 @@ class _DashboardScreenState extends State<DashboardScreen> {
                     return Row(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Expanded(flex: 2, child: _buildRecentMembersCard()),
+                        Expanded(flex: 2, child: _buildRecentMembersCard(context)),
                         const SizedBox(width: 20),
-                        Expanded(flex: 1, child: _buildRightColumn()),
+                        Expanded(flex: 1, child: _buildRightColumn(context)),
                       ],
                     );
                   }
                   return Column(
                     children: [
-                      _buildRecentMembersCard(),
+                      _buildRecentMembersCard(context),
                       const SizedBox(height: 20),
-                      _buildRightColumn(),
+                      _buildRightColumn(context),
                     ],
                   );
                 },
@@ -253,7 +196,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
     );
   }
 
-  Widget _buildStatsGrid() {
+  Widget _buildStatsGrid(BuildContext context) {
     final stats = [
       _StatData('Total Members', _totalMembers.toString(), '+12% from last month',
           Icons.people_outline, true),
@@ -261,8 +204,8 @@ class _DashboardScreenState extends State<DashboardScreen> {
           Icons.church_outlined, true),
       _StatData('Upcoming Events', _upcomingEvents.toString(), '3 happening this week',
           Icons.event_outlined, false),
-      _StatData('Monthly Giving', _monthlyGiving, '+18% from last month',
-          Icons.attach_money_outlined, true),
+      _StatData(
+          'Monthly Giving', _monthlyGiving, '+18% from last month', Icons.payments_outlined, true),
     ];
 
     return LayoutBuilder(
@@ -286,13 +229,10 @@ class _DashboardScreenState extends State<DashboardScreen> {
     );
   }
 
-  Widget _buildRecentMembersCard() {
+  Widget _buildRecentMembersCard(BuildContext context) {
+    final onSurface = Theme.of(context).colorScheme.onSurface;
+
     return Card(
-      elevation: 0,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(10),
-        side: const BorderSide(color: BCCTheme.borderGray),
-      ),
       child: Padding(
         padding: const EdgeInsets.all(20),
         child: Column(
@@ -301,18 +241,12 @@ class _DashboardScreenState extends State<DashboardScreen> {
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                const Text(
+                Text(
                   'Recent Members',
-                  style: TextStyle(
-                    fontSize: 16,
-                    fontWeight: FontWeight.w600,
-                    color: BCCTheme.darkGray,
-                  ),
+                  style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600, color: onSurface),
                 ),
                 TextButton(
-                  onPressed: () {
-                    context.push('/members');
-                  },
+                  onPressed: () => context.push('/members'),
                   child: const Text('View all'),
                 ),
               ],
@@ -332,35 +266,24 @@ class _DashboardScreenState extends State<DashboardScreen> {
     );
   }
 
-  Widget _buildRightColumn() {
+  Widget _buildRightColumn(BuildContext context) {
+    final onSurface = Theme.of(context).colorScheme.onSurface;
+
     return Column(
       children: [
         Card(
-          elevation: 0,
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(10),
-            side: const BorderSide(color: BCCTheme.borderGray),
-          ),
           child: Padding(
             padding: const EdgeInsets.all(20),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                const Text(
-                  'Quick Actions',
-                  style: TextStyle(
-                    fontSize: 16,
-                    fontWeight: FontWeight.w600,
-                    color: BCCTheme.darkGray,
-                  ),
-                ),
+                Text('Quick Actions',
+                    style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600, color: onSurface)),
                 const SizedBox(height: 12),
                 _QuickActionButton(
                   icon: Icons.fact_check_outlined,
                   label: 'Record Attendance',
-                  onTap: () {
-                    context.push('/checkin');
-                  },
+                  onTap: () => context.push('/checkin'),
                 ),
                 const SizedBox(height: 8),
                 _QuickActionButton(
@@ -368,9 +291,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                   label: 'Add New Member',
                   onTap: () async {
                     final added = await context.push('/members/new');
-                    if (added == true) {
-                      _loadDashboardData();
-                    }
+                    if (added == true) _loadDashboardData();
                   },
                 ),
                 const SizedBox(height: 8),
@@ -382,9 +303,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                       context,
                       MaterialPageRoute(builder: (context) => const LogOfferingScreen()),
                     );
-                    if (saved == true) {
-                      _loadDashboardData();
-                    }
+                    if (saved == true) _loadDashboardData();
                   },
                 ),
                 const SizedBox(height: 8),
@@ -396,9 +315,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                       context,
                       MaterialPageRoute(builder: (context) => const AddEventScreen()),
                     );
-                    if (created == true) {
-                      _loadDashboardData();
-                    }
+                    if (created == true) _loadDashboardData();
                   },
                 ),
               ],
@@ -407,55 +324,30 @@ class _DashboardScreenState extends State<DashboardScreen> {
         ),
         const SizedBox(height: 16),
         Card(
-          elevation: 0,
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(10),
-            side: const BorderSide(color: BCCTheme.borderGray),
-          ),
           child: Padding(
             padding: const EdgeInsets.all(20),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                const Text(
-                  'Next Event',
-                  style: TextStyle(
-                    fontSize: 16,
-                    fontWeight: FontWeight.w600,
-                    color: BCCTheme.darkGray,
-                  ),
-                ),
+                Text('Next Event',
+                    style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600, color: onSurface)),
                 const SizedBox(height: 12),
-                if (_nextEvent != null) _buildEventMini(_nextEvent!),
+                if (_nextEvent != null) _buildEventMini(context, _nextEvent!),
               ],
             ),
           ),
         ),
         const SizedBox(height: 16),
         Card(
-          elevation: 0,
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(10),
-            side: const BorderSide(color: BCCTheme.borderGray),
-          ),
           child: Padding(
             padding: const EdgeInsets.all(20),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                const Text(
-                  'Monthly Giving (UGX M)',
-                  style: TextStyle(
-                    fontSize: 16,
-                    fontWeight: FontWeight.w600,
-                    color: BCCTheme.darkGray,
-                  ),
-                ),
+                Text('Monthly Giving (UGX M)',
+                    style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600, color: onSurface)),
                 const SizedBox(height: 20),
-                SizedBox(
-                  height: 160,
-                  child: _SimpleBarChart(data: _givingData),
-                ),
+                SizedBox(height: 160, child: _SimpleBarChart(data: _givingData)),
               ],
             ),
           ),
@@ -464,14 +356,17 @@ class _DashboardScreenState extends State<DashboardScreen> {
     );
   }
 
-  Widget _buildEventMini(ChurchEvent event) {
+  Widget _buildEventMini(BuildContext context, ChurchEvent event) {
+    final onSurface = Theme.of(context).colorScheme.onSurface;
+    final secondary = onSurface.withValues(alpha: 0.6);
+
     return Row(
       children: [
         Container(
           width: 52,
           height: 52,
           decoration: BoxDecoration(
-            color: BCCTheme.orangeLight,
+            color: BCCTheme.orange.withValues(alpha: 0.12),
             borderRadius: BorderRadius.circular(8),
           ),
           child: Column(
@@ -503,21 +398,14 @@ class _DashboardScreenState extends State<DashboardScreen> {
             children: [
               Text(
                 event.title,
-                style: const TextStyle(
-                  fontWeight: FontWeight.w600,
-                  fontSize: 14,
-                  color: BCCTheme.darkGray,
-                ),
+                style: TextStyle(fontWeight: FontWeight.w600, fontSize: 14, color: onSurface),
                 maxLines: 1,
                 overflow: TextOverflow.ellipsis,
               ),
               const SizedBox(height: 3),
               Text(
                 '${event.dayName}, ${_formatTime(event.startDate)} - ${event.location}',
-                style: const TextStyle(
-                  fontSize: 12,
-                  color: BCCTheme.midGray,
-                ),
+                style: TextStyle(fontSize: 12, color: secondary),
                 maxLines: 1,
                 overflow: TextOverflow.ellipsis,
               ),
@@ -554,6 +442,41 @@ class _DashboardScreenState extends State<DashboardScreen> {
   }
 }
 
+// A tappable search bar that adapts to the current theme
+class _SearchBarAction extends StatelessWidget {
+  const _SearchBarAction();
+
+  @override
+  Widget build(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
+    return InkWell(
+      onTap: () => context.push('/search'),
+      borderRadius: BorderRadius.circular(10),
+      child: Container(
+        margin: const EdgeInsets.only(right: 8),
+        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+        decoration: BoxDecoration(
+          color: cs.surfaceContainerHighest,
+          borderRadius: BorderRadius.circular(10),
+          border: Border.all(color: cs.outline),
+        ),
+        child: Row(
+          children: [
+            Icon(Icons.search, size: 18, color: cs.onSurface.withValues(alpha: 0.6)),
+            const SizedBox(width: 8),
+            Text(
+              'Search members, events...',
+              style: TextStyle(fontSize: 14, color: cs.onSurface.withValues(alpha: 0.6)),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+// ==================== STAT CARD ====================
+
 class _StatData {
   final String label;
   final String value;
@@ -571,12 +494,10 @@ class _StatCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
+    final secondary = cs.onSurface.withValues(alpha: 0.6);
+
     return Card(
-      elevation: 0,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(10),
-        side: const BorderSide(color: BCCTheme.borderGray),
-      ),
       child: Padding(
         padding: const EdgeInsets.all(20),
         child: Column(
@@ -585,21 +506,21 @@ class _StatCard extends StatelessWidget {
           children: [
             Text(
               stat.label,
-              style: const TextStyle(
+              style: TextStyle(
                 fontSize: 12,
                 fontWeight: FontWeight.w600,
-                color: BCCTheme.midGray,
+                color: secondary,
                 letterSpacing: 0.5,
               ),
             ),
             const SizedBox(height: 8),
             Text(
               stat.value,
-              style: const TextStyle(
+              style: TextStyle(
                 fontSize: 28,
                 fontWeight: FontWeight.w700,
-                color: BCCTheme.darkGray,
-                fontFeatures: [FontFeature.tabularFigures()],
+                color: cs.onSurface,
+                fontFeatures: const [FontFeature.tabularFigures()],
               ),
             ),
             const SizedBox(height: 6),
@@ -612,7 +533,7 @@ class _StatCard extends StatelessWidget {
                   style: TextStyle(
                     fontSize: 13,
                     fontWeight: FontWeight.w600,
-                    color: stat.isPositive ? BCCTheme.success : BCCTheme.midGray,
+                    color: stat.isPositive ? BCCTheme.success : secondary,
                   ),
                 ),
               ],
@@ -624,6 +545,8 @@ class _StatCard extends StatelessWidget {
   }
 }
 
+// ==================== MEMBER ROW ====================
+
 class _MemberRow extends StatelessWidget {
   final Member member;
 
@@ -631,6 +554,7 @@ class _MemberRow extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
     Color tagColor;
     Color tagBg;
     String statusText;
@@ -648,15 +572,13 @@ class _MemberRow extends StatelessWidget {
         statusText = 'New';
         break;
       default:
-        tagColor = BCCTheme.midGray;
-        tagBg = BCCTheme.lightGray;
+        tagColor = cs.onSurface.withValues(alpha: 0.6);
+        tagBg = cs.surfaceContainerHighest;
         statusText = 'Visitor';
     }
 
     return InkWell(
-      onTap: () {
-        context.push('/members/${member.id}');
-      },
+      onTap: () => context.push('/members/${member.id}'),
       borderRadius: BorderRadius.circular(6),
       child: Padding(
         padding: const EdgeInsets.symmetric(vertical: 10),
@@ -682,35 +604,22 @@ class _MemberRow extends StatelessWidget {
                 children: [
                   Text(
                     member.fullName,
-                    style: const TextStyle(
-                      fontSize: 14,
-                      fontWeight: FontWeight.w500,
-                      color: BCCTheme.darkGray,
-                    ),
+                    style:
+                        TextStyle(fontSize: 14, fontWeight: FontWeight.w500, color: cs.onSurface),
                   ),
                   Text(
                     member.ministryLabel ?? 'General Member',
-                    style: const TextStyle(
-                      fontSize: 12,
-                      color: BCCTheme.midGray,
-                    ),
+                    style: TextStyle(fontSize: 12, color: cs.onSurface.withValues(alpha: 0.6)),
                   ),
                 ],
               ),
             ),
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-              decoration: BoxDecoration(
-                color: tagBg,
-                borderRadius: BorderRadius.circular(6),
-              ),
+              decoration: BoxDecoration(color: tagBg, borderRadius: BorderRadius.circular(6)),
               child: Text(
                 statusText,
-                style: TextStyle(
-                  fontSize: 12,
-                  fontWeight: FontWeight.w600,
-                  color: tagColor,
-                ),
+                style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: tagColor),
               ),
             ),
           ],
@@ -719,40 +628,36 @@ class _MemberRow extends StatelessWidget {
     );
   }
 }
+
+// ==================== QUICK ACTION BUTTON ====================
 
 class _QuickActionButton extends StatelessWidget {
   final IconData icon;
   final String label;
   final VoidCallback onTap;
 
-  const _QuickActionButton({
-    required this.icon,
-    required this.label,
-    required this.onTap,
-  });
+  const _QuickActionButton({required this.icon, required this.label, required this.onTap});
 
   @override
   Widget build(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
+
     return InkWell(
       onTap: onTap,
       borderRadius: BorderRadius.circular(8),
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
         decoration: BoxDecoration(
-          border: Border.all(color: BCCTheme.borderGray),
+          border: Border.all(color: cs.outline),
           borderRadius: BorderRadius.circular(8),
         ),
         child: Row(
           children: [
-            Icon(icon, size: 18, color: BCCTheme.darkGray),
+            Icon(icon, size: 18, color: cs.onSurface),
             const SizedBox(width: 10),
             Text(
               label,
-              style: const TextStyle(
-                fontSize: 14,
-                fontWeight: FontWeight.w500,
-                color: BCCTheme.darkGray,
-              ),
+              style: TextStyle(fontSize: 14, fontWeight: FontWeight.w500, color: cs.onSurface),
             ),
           ],
         ),
@@ -760,6 +665,8 @@ class _QuickActionButton extends StatelessWidget {
     );
   }
 }
+
+// ==================== SIMPLE BAR CHART ====================
 
 class _SimpleBarChart extends StatelessWidget {
   final List<Map<String, dynamic>> data;
@@ -768,6 +675,7 @@ class _SimpleBarChart extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final secondary = Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.6);
     final maxValue =
         data.map((e) => (e['amount'] as num).toDouble()).reduce((a, b) => a > b ? a : b);
 
@@ -789,7 +697,7 @@ class _SimpleBarChart extends StatelessWidget {
                   style: TextStyle(
                     fontSize: 11,
                     fontWeight: FontWeight.w600,
-                    color: isHighest ? BCCTheme.orangeDark : BCCTheme.midGray,
+                    color: isHighest ? BCCTheme.orangeDark : secondary,
                   ),
                 ),
                 const SizedBox(height: 6),
@@ -804,11 +712,7 @@ class _SimpleBarChart extends StatelessWidget {
                 const SizedBox(height: 8),
                 Text(
                   item['month'] as String,
-                  style: const TextStyle(
-                    fontSize: 11,
-                    color: BCCTheme.midGray,
-                    fontWeight: FontWeight.w500,
-                  ),
+                  style: TextStyle(fontSize: 11, color: secondary, fontWeight: FontWeight.w500),
                 ),
               ],
             ),

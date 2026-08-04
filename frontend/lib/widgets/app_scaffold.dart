@@ -2,6 +2,7 @@
 import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 import '../providers/auth_provider.dart';
+import '../providers/theme_provider.dart';
 
 /// Reusable drawer so it can be attached to any Scaffold,
 /// including screens (like Dashboard) that use a custom AppBar.
@@ -38,6 +39,19 @@ class AppDrawer extends StatelessWidget {
           ),
           _DrawerItem(icon: Icons.payments_outlined, label: 'Giving', route: '/giving'),
           const Spacer(),
+          const Divider(),
+          Consumer<ThemeProvider>(
+            builder: (context, themeProvider, _) => SwitchListTile(
+              secondary: Icon(
+                themeProvider.isDarkMode ? Icons.dark_mode_outlined : Icons.light_mode_outlined,
+                color: const Color(0xFF64748B),
+              ),
+              title: const Text('Dark Mode'),
+              value: themeProvider.isDarkMode,
+              onChanged: (_) => themeProvider.toggleTheme(),
+              activeThumbColor: const Color(0xFF3B82F6),
+            ),
+          ),
           const Divider(),
           ListTile(
             leading: const Icon(Icons.logout, color: Colors.red),
